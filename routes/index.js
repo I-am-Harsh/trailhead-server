@@ -3,6 +3,7 @@ var router = express.Router();
 
 const request = require('request');
 const cheerio = require('cheerio');
+const axios = require('axios');
 
 /* GET home page. */
 router
@@ -12,28 +13,38 @@ router
 
 .get('/favicon.ico', (req, res) => res.status(204))
 
-.get('/:profile', (req,res,next) => {
-  // var site = "https://trailblazer.me/id/" + req.params.profile;
-  // var site = "http://chriskimdev.com/";
-  // console.log(site);
-  
-  request('https://trailblazer.me/id/akganesa', (error, response, html) => {
-    // Checking that there is no errors and the response code is correct
-    if(!error && response.statusCode === 200){
-        // Declaring cheerio for future usage
-        const $ = cheerio.load(html);
-        
-        // Looking at the inspector or source code we will select the following id value 
-        const siteHeading = $('div') ;
 
-        // Showing our result on the console
-        console.log("=========================================== HTML ===========================================");
-        console.log(siteHeading.html());
-        console.log("=========================================== TEXT ===========================================");
-        console.log(siteHeading.text());
-        res.json(siteHeading.text());
-    }
-  });
-})
+
+// invoke this when the user goes to a certain profile
+// using prem league site for example
+.get('/:profile', (req, res, next) =>{
+  // const url = 'https://www.premierleague.com/stats/top/players/goals?se=-1&cl=-1&iso=-1&po=-1?se=-1';
+  const table = [];
+  request('https://www.premierleague.com/stats/top/players/goals?se=-1&cl=-1&iso=-1&po=-1?se=-1', (error, response, html) => {
+        // const html = response.data;
+        const $ = cheerio.load(html)
+        const statsTable = $('.statsTableContainer > tr');
+        const topPremierLeagueScorers = [];
+
+        statsTable.each(function () {
+          const rank = $(this).find('.rank > strong').text();
+          const playerName = $(this).find('.playerName > strong').text();
+          const nationality = $(this).find('.playerCountry').text();
+          const goals = $(this).find('.mainStat').text();
+
+          topPremierLeagueScorers.push({
+            rank,
+            name: playerName,
+            nationality,
+            goals,
+          });
+        });
+
+        console.log(topPremierLeagueScorers);
+        res.json(topPremierLeagueScorers);
+      })
+});
+
+
 
 module.exports = router;
