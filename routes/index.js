@@ -22,27 +22,22 @@ router
 .get("/:profile", async (req,res,next) => {
 
   // hardcoded for testing
-  // const url = "https://trailblazer.me/id/akganesa";
+  const url = "https://trailblazer.me/id/akganesa";
 
   // // function to load the page
-  // async function getPage(url) {
+  // async function getPage() {
   //   const browser = await puppeteer.launch({headless: true});
   //   const page = await browser.newPage();
   //   await page.goto(url, {waitUntil: 'networkidle0'});
-  //   // initialize i
-  //   var i = 1;
 
-  //   // if i then loop
-  //   while(i){
+  //   const [first_button] = await page.$x("//button[contains(., 'Show More')]");
+  //   await first_button.click();
+  //   while (
+  //     (await (await page.$x("//button[contains(., 'Show More')]")).length) > 0
+  //   ) {
   //     const [button] = await page.$x("//button[contains(., 'Show More')]");
-  //     if (button) {
-  //       await button.click();
-  //       await page.waitFor(3000);
-  //     }
-  //     // if show more is not there then set i to 0
-  //     else{
-  //       i = 0;
-  //     }
+  //     await button.click();
+  //     await page.waitForResponse(response => response.status() === 200);
   //   }
 
   //   const html = await page.content(); // serialized HTML of page DOM.
@@ -53,22 +48,14 @@ router
 
 
   // =====================================new code-===============================
-
+  var html = '';
   const go = async () => {
-    const browser = await puppeteer.launch({
-      headless: false,
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--window-size=1600,1200"
-      ],
-      defaultViewport: null
-    });
+    const browser = await puppeteer.launch({headless: true});
     const context = await browser.createIncognitoBrowserContext();
     const page = await context.newPage();
     try {
-      await page.goto("https://trailblazer.me/id/akganesa", {
-        waitUntil: "networkidle2"
+      await page.goto(url, {
+        waitUntil: "networkidle0"
       });
       const [first_button] = await page.$x("//button[contains(., 'Show More')]");
       await first_button.click();
@@ -78,7 +65,10 @@ router
         const [button] = await page.$x("//button[contains(., 'Show More')]");
         await button.click();
         await page.waitForResponse(response => response.status() === 200);
+        
       }
+      html = await page.content();
+      // console.log(html);
       browser.close();
       return;
     } catch (err) {
@@ -88,11 +78,12 @@ router
     }
   };
   
+  await go();
 
   // end==============================
 
   // using cheerio to scrape
-  const html = await go(url);
+  // const html = await go();
   const $ = cheerio.load(html);
 
   // initialising the arr
