@@ -1,11 +1,10 @@
 var express = require('express');
 var router = express.Router();
 
-const request = require('request');
+
 const cheerio = require('cheerio');
-const axios = require('axios');
 const puppeteer = require('puppeteer');
-const select = require('puppeteer-select');
+
 
 
 /* GET home page. */
@@ -21,69 +20,38 @@ router
 
 .get("/:profile", async (req,res,next) => {
 
-  // hardcoded for testing
-  const url = "https://trailblazer.me/id/akganesa";
-
-  // // function to load the page
-  // async function getPage() {
-  //   const browser = await puppeteer.launch({headless: true});
-  //   const page = await browser.newPage();
-  //   await page.goto(url, {waitUntil: 'networkidle0'});
-
-  //   const [first_button] = await page.$x("//button[contains(., 'Show More')]");
-  //   await first_button.click();
-  //   while (
-  //     (await (await page.$x("//button[contains(., 'Show More')]")).length) > 0
-  //   ) {
-  //     const [button] = await page.$x("//button[contains(., 'Show More')]");
-  //     await button.click();
-  //     await page.waitForResponse(response => response.status() === 200);
-  //   }
-
-  //   const html = await page.content(); // serialized HTML of page DOM.
-  //   await browser.close();
-  //   return html;
-  // }
-
-
-
-  // =====================================new code-===============================
-  var html = '';
-  const go = async () => {
+  const userId = req.params.profile;
+  console.log(req.params.profile);
+  const url = "https://trailblazer.me/id/" + userId;
+// function to load the page
+  async function getPage(url) {
     const browser = await puppeteer.launch({headless: true});
-    const context = await browser.createIncognitoBrowserContext();
-    const page = await context.newPage();
-    try {
-      await page.goto(url, {
-        waitUntil: "networkidle0"
-      });
-      const [first_button] = await page.$x("//button[contains(., 'Show More')]");
-      await first_button.click();
-      while (
-        (await (await page.$x("//button[contains(., 'Show More')]")).length) > 0
-      ) {
-        const [button] = await page.$x("//button[contains(., 'Show More')]");
-        await button.click();
-        await page.waitForResponse(response => response.status() === 200);
-        
-      }
-      html = await page.content();
-      // console.log(html);
-      browser.close();
-      return;
-    } catch (err) {
-      console.log(err);
-      browser.close();
-      return;
-    }
-  };
-  
-  await go();
+    const page = await browser.newPage();
+    await page.goto(url, {waitUntil: 'networkidle0'});
+    // initialize i
+    var i = 1;
 
-  // end==============================
+    // if i then loop
+    while(i){
+      const [button] = await page.$x("//button[contains(., 'Show More')]");
+      if (button) {
+        await button.click();
+        await page.waitFor(3000);
+      }
+      // if show more is not there then set i to 0
+      else{
+        i = 0;
+      }
+    }
+
+    const html = await page.content(); // serialized HTML of page DOM.
+    await browser.close();
+    return html;
+  }
+
 
   // using cheerio to scrape
-  // const html = await go();
+  const html = await getPage(url);
   const $ = cheerio.load(html);
 
   // initialising the arr
@@ -97,10 +65,11 @@ router
 
   // storing the names of the badges 
   $('figcaption').find('.tds-color_black').each(function(i,elem){
-    badges[i] = i + " : " + $(this).text();
+    badges[i] = i + 1 + " : " + $(this).text();
   });
 
   // send
+  console.log(stats);
   res.json({"Badges" : stats[0], "Points" : stats[1], "trails" : stats[2], "Badges Names" : badges});
 
 });
