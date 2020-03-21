@@ -18,7 +18,7 @@ router
 
 
 
-.get("/:profile", async (req,res,next) => {
+.get("/profile", async (req,res,next) => {
 
   const userId = req.params.profile;
   console.log(req.params.profile);
@@ -36,7 +36,7 @@ router
       const [button] = await page.$x("//button[contains(., 'Show More')]");
       if (button) {
         await button.click();
-        await page.waitFor(3000);
+        await page.waitFor(2000);
       }
       // if show more is not there then set i to 0
       else{
@@ -71,6 +71,11 @@ router
   // send
   console.log(stats);
   res.json({"Badges" : stats[0], "Points" : stats[1], "trails" : stats[2], "Badges Names" : badges});
+
+})
+
+.get('/resp', (req, res, next) => {
+  res.send("Hi this is some response");
 
 });
 
